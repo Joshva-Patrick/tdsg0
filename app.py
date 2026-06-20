@@ -4,7 +4,6 @@ import csv
 
 app = FastAPI()
 
-# Enable CORS for all origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,7 +16,7 @@ CSV_FILE = "q-fastapi.csv"
 
 
 @app.get("/api")
-def get_students(class_: list[str] | None = Query(None, alias="class")):
+def get_students(class_: list[str] | None = Query(default=None, alias="class")):
 
     students = []
 
@@ -25,13 +24,10 @@ def get_students(class_: list[str] | None = Query(None, alias="class")):
         reader = csv.DictReader(f)
 
         for row in reader:
-            # No filter -> return all students
-            if class_ is None:
-                students.append(row)
+            if class_ is None or row["class"] in class_:
+                students.append({
+                    "studentId": int(row["studentId"]),
+                    "class": row["class"]
+                })
 
-            # Filter by one or more classes
-            elif row["class"] in class_:
-                students.append(row)
-
-    return students
-
+    return {"students": students}
